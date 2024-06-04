@@ -1,3 +1,10 @@
+import requests
+from customtkinter import *
+from customtkinter.windows.widgets.core_widget_classes.ctk_base_class import CTkImage
+from tkinter import Canvas
+from PIL import Image, ImageTk
+from math import sqrt
+
 class App(CTk):
     def __init__(self):
         super().__init__()
