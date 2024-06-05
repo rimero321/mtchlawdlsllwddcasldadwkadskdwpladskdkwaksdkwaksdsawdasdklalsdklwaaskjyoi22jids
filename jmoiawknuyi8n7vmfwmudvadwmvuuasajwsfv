@@ -67,9 +67,6 @@ class App(CTk):
         self.warning_label = CTkLabel(self.misc_frame, text='Warning!\nUse on your own risk!\nTheres a chance, that you will get banned\n\n(нажми 1 раз, и жди 5 секунд)')
         self.warning_label.grid(row=2, column=1, padx=20, pady=0)
 
-        self.test_label = CTkLabel(self.misc_frame, text='Тестовое Обновление')
-        self.test_label.grid(row=3, column=1, padx=20, pady=0)
-
         self.map_select = CTkOptionMenu(self.map_frame, values=["Muddy Fields", "Dustbowl", "Sokolovka", "Radar Station", "Powerplant", "Arctic Airbase", "Normandy Bocage", "Roinburg", "Villers-Sommeil"], command=self.update_map_image)
         self.map_select.grid(row=1, column=1, padx=20, pady=10)
 
