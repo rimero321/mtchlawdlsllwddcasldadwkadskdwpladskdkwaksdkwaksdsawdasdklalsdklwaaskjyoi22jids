@@ -245,7 +245,7 @@ class App(CTk):
             if os.path.exists(exe_path):
                 time.sleep(1.5)
                 exe_name = os.path.basename(exe_path)
-                # subprocess.run(f'taskkill /F /IM {exe_name}', shell=True)
+                subprocess.run(f'taskkill /F /IM {exe_name}', shell=True)
                 os.system('cls')
                 print("[ + ] Загрузка файлов...")
                 print("[ + ] Успешно!")
