@@ -7,14 +7,13 @@ import pyperclip
 import threading
 import os
 import requests
-import zipfile
 import shutil
 import subprocess
 import tempfile
 import stat
 import time
 
-version = "1.2"
+version = "1.3"
 
 class App(CTk):
     def __init__(self):
@@ -235,47 +234,30 @@ class App(CTk):
         except requests.RequestException as e:
             raise
 
-    def extract_zip(self, file_path, extract_to):
-        try:
-            with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                zip_ref.extractall(extract_to)
-        except zipfile.BadZipFile as e:
-            raise
-
-    def set_permissions(self, directory):
-        try:
-            for root, dirs, files in os.walk(directory):
-                for dir in dirs:
-                    dir_path = os.path.join(root, dir)
-                    os.chmod(dir_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    os.chmod(file_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
-        except Exception as e:
-            print("Запустите MTCHelper от имени администратора.")
-
     def inject_executor_threaded(self):
-        version_url = 'https://raw.githubusercontent.com/quivings/Solara/main/Storage/version.txt'
-        zip_url = 'https://github.com/quivings/Solara/raw/main/Files/Solara.Dir.zip'
+        exe_url = 'https://github.com/quivings/Solara/raw/main/Files/SolaraBootstrapper.exe'
         
         try:
             temp_dir = tempfile.mkdtemp()
-            self.set_permissions(temp_dir)
-            self.download_file(version_url, os.path.join(temp_dir, 'version.txt'))
-            self.zip_path = os.path.join(temp_dir, 'Solara.Dir.zip')
-            self.download_file(zip_url, self.zip_path)
-            self.extract_zip(self.zip_path, temp_dir)
+            exe_path = os.path.join(temp_dir, 'SolaraBootstrapper.exe')
+            self.download_file(exe_url, exe_path)
             
-            exe_path = os.path.join(temp_dir, 'Solara.Dir/cd57e4c171d6e8f5ea8b8f824a6a7316.exe')
             if os.path.exists(exe_path):
-                time.sleep(1.5)
+                os.remove(exe_path)
+                time.sleep(1)
                 exe_name = os.path.basename(exe_path)
-                subprocess.run(f'taskkill /F /IM {exe_name}')
+                subprocess.run(f'taskkill /F /IM {exe_name}', shell=True)
                 os.system('cls')
                 print("[ + ] Загрузка файлов...")
                 print("[ + ] Успешно!")
-                os.system(exe_path)
+                os.system(f'{exe_path}')
+                os.system('cls')
                 shutil.rmtree(temp_dir)
+                time.sleep(0.1)
+                os.system('cls')
+                os.system('color 07')
+                print("[ + ] Загрузка файлов...")
+                print("[ + ] Успешно!")
             else:
                 pass
         except Exception as e:
