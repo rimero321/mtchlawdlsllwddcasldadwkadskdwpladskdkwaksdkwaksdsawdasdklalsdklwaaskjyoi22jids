@@ -92,31 +92,6 @@ class App(CTk):
 
         self.select_frame_by_name("map")
 
-    def adminscript_copy(self):
-        self.select = 1
-        self.get_script()
-    
-    def espscript_copy(self):
-        self.select = 2
-        self.get_script()
-
-    def trollscript_copy(self):
-        self.select = 3
-        self.get_script()
-
-    def get_script(self):
-        selected_script = int(self.select)
-        if selected_script == 1:
-            pyperclip.copy("loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()")
-            print("[ + ] Скопировано!")
-        elif selected_script == 2:
-            pyperclip.copy("loadstring(game:HttpGet('https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/UESP'))()")
-            print("[ + ] Скопировано!")
-        # elif selected_script == 3:
-        #     print(self.troll_script)
-        #     pyperclip.copy(self.troll_script)
-        #     print("[ + ] Скопировано!")
-
         self.map_images = {
             "Muddy Fields": "maps/muddy_fields.png",
             "Dustbowl": "maps/dustbowl.png",
@@ -167,6 +142,27 @@ class App(CTk):
             self.map_frame.grid(row=0, column=1, sticky="nsew")
         else:
             self.map_frame.grid_forget()
+
+    def adminscript_copy(self):
+        self.select = 1
+        self.get_script()
+    
+    def espscript_copy(self):
+        self.select = 2
+        self.get_script()
+
+    def trollscript_copy(self):
+        self.select = 3
+        self.get_script()
+
+    def get_script(self):
+        selected_script = int(self.select)
+        if selected_script == 1:
+            pyperclip.copy("loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()")
+            print("[ + ] Скопировано!")
+        elif selected_script == 2:
+            pyperclip.copy("loadstring(game:HttpGet('https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/UESP'))()")
+            print("[ + ] Скопировано!")
 
     def home_button_event(self):
         self.select_frame_by_name("home")
