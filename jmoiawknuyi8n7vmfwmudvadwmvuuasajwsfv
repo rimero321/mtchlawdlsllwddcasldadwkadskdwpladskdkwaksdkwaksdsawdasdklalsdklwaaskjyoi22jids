@@ -13,7 +13,7 @@ import tempfile
 import stat
 import time
 
-version = "1.4"
+version = "1.5"
 
 class App(CTk):
     def __init__(self):
@@ -84,11 +84,11 @@ class App(CTk):
         self.esp_button = CTkButton(self.home_frame, text="Скопировать", command=self.espscript_copy)
         self.esp_button.grid(row=4, column=0, pady=0)
 
-        # self.trollscript_label = CTkLabel(self.home_frame, text="Troll Script (Ragdoll)")
-        # self.trollscript_label.grid(row=3, column=0, pady=10)
+        self.mtchelper_label = CTkLabel(self.home_frame, text="MTCHelper (Script)")
+        self.mtchelper_label.grid(row=5, column=0, pady=10)
         
-        # self.trollscript_button = CTkButton(self.home_frame, text="Скопировать", command=self.trollscript_copy)
-        # self.trollscript_button.grid(row=4, column=0, pady=0)
+        self.mtchelper_button = CTkButton(self.home_frame, text="Скопировать", command=self.mtchelper_copy)
+        self.mtchelper_button.grid(row=6, column=0, pady=0)
 
         self.select_frame_by_name("map")
 
@@ -151,7 +151,7 @@ class App(CTk):
         self.select = 2
         self.get_script()
 
-    def trollscript_copy(self):
+    def mtchelper_copy(self):
         self.select = 3
         self.get_script()
 
@@ -162,6 +162,9 @@ class App(CTk):
             print("[ + ] Скопировано!")
         elif selected_script == 2:
             pyperclip.copy("loadstring(game:HttpGet('https://raw.githubusercontent.com/Lucasfin000/SpaceHub/main/UESP'))()")
+            print("[ + ] Скопировано!")
+        elif selected_script == 3:
+            pyperclip.copy("loadstring(game:HttpGet('https://raw.githubusercontent.com/rimero321/mtchlawdlsllwddcasldadwkadskdwpladskdkwaksdkwaksdsawdasdklalsdklwaaskjyoi22jids/main/wdasdwadsaygdwuiohigyfdufioohrwttyhufiduwfdumtchelper'))()")
             print("[ + ] Скопировано!")
 
     def home_button_event(self):
